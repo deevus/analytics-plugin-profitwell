@@ -24,6 +24,10 @@ interface ProfitwellStatic {
     action: "cq_demo",
     demo: "lockout" | "custom_url",
   ): void;
+  (
+    action: "user_id" | "user_email",
+    payload: string,
+  ): void;
 
   q?: IArguments[];
 
@@ -95,6 +99,7 @@ const profitwellPlugin = (config: ProfitwellPluginConfig): AnalyticsPlugin => {
           i[o] = i[o] || function() { (i[o].q = i[o].q || []).push(arguments) };
           a.async = true; a.src = `${r}?auth=${config.publicToken}`; m.parentNode?.insertBefore(a, m);
         })(window, document, 'profitwell', 'script', scriptSrc);
+
       },
 
       loaded() {
@@ -102,32 +107,19 @@ const profitwellPlugin = (config: ProfitwellPluginConfig): AnalyticsPlugin => {
       },
 
       identify({ payload }: Params): void {
-        const { userId } = payload;
+        const { traits } = payload;
 
-        // authenticated user
-        if (typeof userId === 'string') {
-          switch (config.identifyMode) {
-            case ProfitwellIdentifyMode.Custom:
-              window.profitwell('start', {
-                user_id: config.getCustomId?.(payload.traits),
-              });
-              return;
-            case ProfitwellIdentifyMode.Email:
-              window.profitwell('start', {
-                user_email: payload.traits.email,
-              });
-              return;
-            case ProfitwellIdentifyMode.UserId:
-            default:
-              window.profitwell('start', {
-                user_id: userId,
-              });
-              return;
-          }
+        if (config.identifyMode === ProfitwellIdentifyMode.Email) {
+          window.profitwell('user_email', traits.email);
         } else {
-          // anonymous tracking
-          window.profitwell('start', {});
+          const userId = config.identifyMode === ProfitwellIdentifyMode.Custom ? config.getCustomId?.(traits) : payload.userId as string;
+
+          window.profitwell('user_id', userId);
         }
+      },
+
+      ready(): void {
+        window.profitwell('start', {});
       },
     };
   } else {
