@@ -1,6 +1,6 @@
 {
   "name": "analytics-plugin-profitwell",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Profitwell plugin for Analytics",
   "main": "dist/lib.node.js",
   "browser": "dist/lib.browser.js",
